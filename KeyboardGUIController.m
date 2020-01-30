@@ -11,6 +11,8 @@ classdef KeyboardGUIController < handle
         
         screen_width
         screen_height
+        last_flip = true
+        flip = true;
     end
     
     methods
@@ -59,7 +61,18 @@ classdef KeyboardGUIController < handle
                 this.y_pos = this.y_pos - this.step;
             elseif keyCode(this.key.down)
                 this.y_pos = this.y_pos + this.step;
+            elseif keyCode(this.key.space)
+                this.flip = ~this.flip;
             end
+        end
+        
+        function status = flipped(this)
+            status = false;
+            if this.last_flip ~= this.flip
+                status = true;
+                this.last_flip = this.flip;
+            end
+            
         end
         
     end

@@ -9,6 +9,7 @@ classdef Key
         left = KbName('LeftArrow');
         right = KbName('RightArrow');   
         escape = KbName('ESCAPE');
+        space = KbName('Space');
 
     end
     

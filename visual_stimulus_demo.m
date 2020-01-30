@@ -10,7 +10,7 @@ screenNumber = max(screens);
 white = WhiteIndex(screenNumber);
 black = BlackIndex(screenNumber);
 
-[window, windowRect] = PsychImaging('OpenWindow', 1, black);
+[window, windowRect] = PsychImaging('OpenWindow', 0, black);
 [scrn_width, scrn_height] = Screen('WindowSize', window);
 
 % Query the frame duration
@@ -50,8 +50,9 @@ while guiController.update()
     gabor_tex.draw()
 
     % Draw the rect to the screen
-    Screen('FillRect', window, rect_color, baseRect);
+    Screen('FillRect', window, rect_color, rect);
 
+    
     % Flip to the screen
     vbl  = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 end

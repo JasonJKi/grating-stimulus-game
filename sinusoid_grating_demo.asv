@@ -8,7 +8,7 @@ cyclespersecond=1;
 orientation=0;
 
 movieDurationSecs=60; % Abort demo after 60 seconds.
-texsize=300; % Half-Size of the grating image.
+textex_size=300; % Half-tex_size of the grating image.
 % 
 % AssertOpenGL;
 
@@ -43,53 +43,25 @@ Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 % Create a special texture drawing shader for masked texture drawing:
 glsl = MakeTextureDrawShader(window, 'SeparateAlphaChannel');
 
+f=0.05;
+
 % Calculate parameters of the grating:
-p=ceil(1/f); % pixels/cycle, rounded up.
-fr=f*2*pi;
-visiblesize=2*texsize+1;
 
-% Create one single static grating image:
-x = meshgrid(-texsize:texsize + p, -texsize:texsize);
-grating = gray + inc*cos(fr*x);
+tex_size = 300;
+grating1 = sinusoidGrating(f, tex_size);
+gratingtex1 = Screen('MakeTexture', window, grating1 , [], [], [], [],glsl);
 
-% Create circular aperture for the alpha-channel:
-[x,y]=meshgrid(-texsize:texsize, -texsize:texsize);
-circle = white * (x.^2 + y.^2 <= (texsize)^2);
-
-% Set 2nd channel (the alpha channel) of 'grating' to the aperture
-% defined in 'circle':
-grating(:,:,2) = 0;
-grating(1:2*texsize+1, 1:2*texsize+1, 2) = circle;
-
-% Store alpha-masked grating in texture and attach the special 'glsl'
-% texture shader to it:
-gratingtex1 = Screen('MakeTexture', window, grating , [], [], [], [], glsl);
-
-% Build a second drifting grating texture, this time half the texsize
-% of the 1st texture:
-texsize = ceil(texsize/2);
-visible2size = 2*texsize+1;
-x = meshgrid(-texsize:texsize + p, -texsize:texsize);
-grating = gray + inc*cos(fr*x);
-
-% Create circular aperture for the alpha-channel:
-[x,y]=meshgrid(-texsize:texsize, -texsize:texsize);
-circle = white * (x.^2 + y.^2 <= (texsize)^2);
-
-% Set 2nd channel (the alpha channel) of 'grating' to the aperture
-% defined in 'circle':
-grating(:,:,2) = 0;
-grating(1:2*texsize+1, 1:2*texsize+1, 2) = circle;
-
-% Store alpha-masked grating in texture and attach the special 'glsl'
-% texture shader to it:
-gratingtex2 = Screen('MakeTexture', window, grating, [], [], [], [], 1);
+tex_size_2 = ceil(tex_size/3);
+grating2 = sinusoidGrating(f, tex_size_2);
+gratingtex2 = Screen('MakeTexture', window, grating2, [], [], [], [], glsl);
 
 % Definition of the drawn source rectorientation on the screen:
-srcRect=[0 0 visiblesize visiblesize];
+visibletex_size=2*tex_size+1;
+srcRect=[0 0 visibletex_size visibletex_size];
 
+visible2tex_size = 2*tex_size_2+1;
 % Definition of the drawn source rectorientation on the screen:
-src2Rect=[0 0 visible2size visible2size];
+src2Rect=[0 0 visible2tex_size visible2tex_size];
 
 % Query duration of monitor refresh interval:
 ifi=Screen('GetFlipInterval', window);
@@ -118,6 +90,8 @@ i=0;
 
 cntrller = KeyboardGUIController(10, x_center, y_center, scrn_width, scrn_height);
 
+flicker_frequency = 3;
+orientation_2 = 0;
 while cntrller.update()
     
     % Shift the grating by "shiftperframe" pixels per frame. We pass
@@ -129,12 +103,25 @@ while cntrller.update()
     % with the "unshifted" alpha mask values inside the Alpha channel:
     yoffset = mod(i*shiftperframe, p);
     i=i+1;
+    t = GetSecs;
+        
+    intensity = sin(t*2*pi*flicker_frequency)*127+128;
     
+    x_pos = cntrller.x_pos;
+    y_pos = cntrller.y_pos;
+    destRect = CenterRectOnPointd(srcRect, x_pos, y_pos);
+    dest2Rect = CenterRectOnPointd(src2Rect, x_pos, y_pos);
+
+    if cntrller.flipped()
+        if orientation_2 == 0
+            orientation_2 = orientation + 90;
+        end
+    end
     % Draw first grating texture, rotated by "orientation":
-    Screen('DrawTexture', window, gratingtex1, [],  [], orientation, [], [], [1], [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, gratingtex1, srcRect, destRect, orientation_2, [], [], [], [], [], [0, yoffset, 0, 0]);
     
     % Draw 2nd grating texture, rotated by "orientation+45":
-    Screen('DrawTexture', window, gratingtex2, [], [], orientation+45, [], [], [], [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, gratingtex2, src2Rect, dest2Rect, orientation, [], [], intensity, [], [], [0, yoffset, 0, 0]);
     
     % Flip 'waitframes' monitor refresh intervals after last redraw.
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);

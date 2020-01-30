@@ -91,7 +91,7 @@ shiftperframe= cyclespersecond * p * waitduration;
 i=0;
 
 % Animationloop:
-while 1%(vbl < vblendtime) && ~KbCheck
+while 1 && ~KbCheck
     
     % Shift the grating by "shiftperframe" pixels per frame:
     xoffset = mod(i*shiftperframe,p);
@@ -104,13 +104,10 @@ while 1%(vbl < vblendtime) && ~KbCheck
     disp(xoffset)
     
     % Draw grating texture, rotated by "orientation":
-    Screen('DrawTexture', window, gratingtexkfjfj
-    
-    s, ...
+    Screen('DrawTexture', window, gratingtex, ...
         [0 0 visiblesize visiblesize], dstRect, orientation, ...
         [], [], [], [],...
         kPsychDontDoRotation, propertiesMat);
-    
 
     if drawmask==1
         % Draw aperture over grating:
