@@ -22,7 +22,6 @@ classdef KeyboardGUIController < handle
             this.y_pos = y_pos;
             this.screen_width = screen_width;
             this.screen_height = screen_height;
-            KbName('UnifyKeyNames');
         end
         
         
@@ -35,6 +34,10 @@ classdef KeyboardGUIController < handle
 
             if keyCode(this.key.escape)
                 status = false;
+            end
+            
+            if keyCode(this.key.space)
+                this.flip = ~this.flip;
             end
         end
         
@@ -55,16 +58,32 @@ classdef KeyboardGUIController < handle
         function upDownLeftRight(this, keyCode)
             if keyCode(this.key.left)
                 this.x_pos = this.x_pos - this.step;
-            elseif keyCode(this.key.right)
-                this.x_pos = this.x_pos + this.step;
-            elseif keyCode(this.key.up)
-                this.y_pos = this.y_pos - this.step;
-            elseif keyCode(this.key.down)
-                this.y_pos = this.y_pos + this.step;
-            elseif keyCode(this.key.space)
-                this.flip = ~this.flip;
             end
+            if keyCode(this.key.right)
+                this.x_pos = this.x_pos + this.step;
+            end
+            if keyCode(this.key.up)
+                this.y_pos = this.y_pos - this.step;
+            end
+            if keyCode(this.key.down)
+                this.y_pos = this.y_pos + this.step;
+            end
+
         end
+%         
+%         function upDownLeftRight(this, keyCode)
+%             if keyCode(this.key.left)
+%                 this.x_pos = this.x_pos - this.step;
+%             elseif keyCode(this.key.right)
+%                 this.x_pos = this.x_pos + this.step;
+%             elseif keyCode(this.key.up)
+%                 this.y_pos = this.y_pos - this.step;
+%             elseif keyCode(this.key.down)
+%                 this.y_pos = this.y_pos + this.step;
+%             elseif keyCode(this.key.space)
+%                 this.flip = ~this.flip;
+%             end
+%         end
         
         function status = flipped(this)
             status = false;
@@ -73,6 +92,12 @@ classdef KeyboardGUIController < handle
                 this.last_flip = this.flip;
             end
             
+        end
+        
+        function test(this)
+            while this.update()
+                disp(['x:' num2str(this.x_pos) 'y:' num2str(this.y_pos)])
+            end
         end
         
     end

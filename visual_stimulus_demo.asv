@@ -52,14 +52,16 @@ while guiController.update()
     % Draw the rect to the screen
     Screen('FillRect', window, rect_color, rect);
 
+    
     % Flip to the screen
     vbl  = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
 end
-gratingsize = 360;
+ gratingsize = 360;
 res = [gratingsize gratingsize];
 gratingtex = CreateProceduralSineGrating(window, res(1), res(2), [0.5 0.5 0.5 0.0]);
 % Clear the screen
 
-
+rect_color = [1 0 0];
+baseRect = [0 0 200 200];
 
 sca;
