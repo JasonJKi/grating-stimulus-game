@@ -49,11 +49,11 @@ f=0.05;
 
 tex_size = 300;
 grating1 = sinusoidGrating(f, tex_size);
-gratingtex1 = Screen('MakeTexture', window, grating1 , [], [], [], [],glsl);
+grating_tex_surround = Screen('MakeTexture', window, grating1 , [], [], [], [],0);
 
 tex_size_2 = ceil(tex_size/3);
 grating2 = sinusoidGrating(f, tex_size_2);
-gratingtex2 = Screen('MakeTexture', window, grating2, [], [], [], [], glsl);
+grating_tex_center = Screen('MakeTexture', window, grating2, [], [], [], [], 0);
 
 % Definition of the drawn source rectorientation on the screen:
 visibletex_size=2*tex_size+1;
@@ -105,23 +105,28 @@ while cntrller.update()
     i=i+1;
     t = GetSecs;
         
-    intensity = sin(t*2*pi*flicker_frequency)*127+128;
+    foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
     
     x_pos = cntrller.x_pos;
     y_pos = cntrller.y_pos;
     destRect = CenterRectOnPointd(srcRect, x_pos, y_pos);
     dest2Rect = CenterRectOnPointd(src2Rect, x_pos, y_pos);
 
+%     foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
+
     if cntrller.flipped()
         if orientation_2 == 0
             orientation_2 = orientation + 90;
+        else
+            orientation_2 = 0;
         end
     end
+    
     % Draw first grating texture, rotated by "orientation":
-    Screen('DrawTexture', window, gratingtex1, srcRect, destRect, orientation_2, [], [], [], [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, grating_tex_surround, srcRect, destRect, orientation_2, [], [], 0, [], [], [0, yoffset, 0, 0]);
     
     % Draw 2nd grating texture, rotated by "orientation+45":
-    Screen('DrawTexture', window, gratingtex2, src2Rect, dest2Rect, orientation, [], [], intensity, [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, grating_tex_center, src2Rect, dest2Rect, orientation, [], [], foveal_intensity, [], [], [0, yoffset, 0, 0]);
     
     % Flip 'waitframes' monitor refresh intervals after last redraw.
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);

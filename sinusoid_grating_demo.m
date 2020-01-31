@@ -49,11 +49,11 @@ f=0.05;
 
 tex_size = 300;
 grating1 = sinusoidGrating(f, tex_size);
-gratingtex1 = Screen('MakeTexture', window, grating1 , [], [], [], [],0);
+grating_tex_surround = Screen('MakeTexture', window, grating1 , [], [], [], [],1);
 
 tex_size_2 = ceil(tex_size/3);
 grating2 = sinusoidGrating(f, tex_size_2);
-gratingtex2 = Screen('MakeTexture', window, grating2, [], [], [], [], 0);
+grating_tex_center = Screen('MakeTexture', window, grating2, [], [], [], [], 1);
 
 % Definition of the drawn source rectorientation on the screen:
 visibletex_size=2*tex_size+1;
@@ -83,7 +83,6 @@ vbl = Screen('Flip', window);
 
 % We run at most 'movieDurationSecs' seconds if user doesn't abort via keypress.
 vblendtime = vbl + movieDurationSecs;
-i=0;
 
 % Animation loop: Run until timeout or keypress.
 [x_center, y_center] = RectCenter(window_rect);
@@ -92,6 +91,9 @@ cntrller = KeyboardGUIController(10, x_center, y_center, scrn_width, scrn_height
 
 flicker_frequency = 3;
 orientation_2 = 0;
+surround_contrast = .5;
+i=0;
+
 while cntrller.update()
     
     % Shift the grating by "shiftperframe" pixels per frame. We pass
@@ -106,7 +108,8 @@ while cntrller.update()
     t = GetSecs;
         
     foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
-    
+    %     foveal_intensity = [];
+
     x_pos = cntrller.x_pos;
     y_pos = cntrller.y_pos;
     destRect = CenterRectOnPointd(srcRect, x_pos, y_pos);
@@ -119,11 +122,12 @@ while cntrller.update()
             orientation_2 = 0;
         end
     end
+    
     % Draw first grating texture, rotated by "orientation":
-    Screen('DrawTexture', window, gratingtex1, srcRect, destRect, orientation_2, [], [], [], [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, grating_tex_surround, srcRect, destRect, orientation_2, [], [], foveal_intensity*surround_contrast, [], [], [0, yoffset, 0, 0]);
     
     % Draw 2nd grating texture, rotated by "orientation+45":
-    Screen('DrawTexture', window, gratingtex2, src2Rect, dest2Rect, orientation, [], [], foveal_intensity, [], [], [0, yoffset, 0, 0]);
+    Screen('DrawTexture', window, grating_tex_center, src2Rect, dest2Rect, orientation, [], [], foveal_intensity, [], [], [0, yoffset, 0, 0]);
     
     % Flip 'waitframes' monitor refresh intervals after last redraw.
     vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
