@@ -18,7 +18,7 @@ function [window, scrn_width, scrn_height, glsl]= create_screen(screenNumber)
     % well defined gray. It isn't strictly neccessary in this demo:
     
     % Open a double buffered fullscreen window with a gray background:
-    window =Screen('OpenWindow',screenNumber, gray);
+    window =Screen('OpenWindow',screenNumber, black);
     [scrn_width, scrn_height] = Screen('WindowSize', window);
     
     % Enable alpha blending for typical drawing of masked textures:

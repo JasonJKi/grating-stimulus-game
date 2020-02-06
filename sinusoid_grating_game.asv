@@ -1,5 +1,5 @@
-close all; clear all;
-[window, scrn_width, scrn_height, glsl]= create_screen();
+% close all; clear all;
+[window, scrn_width, scrn_height, glsl]= create_screen(0);
 window_rect = [0, 0, scrn_width, scrn_height];
 
 f=0.05;
@@ -7,7 +7,7 @@ cyclespersecond=1;
 orientation = 0;
 
 % Create circular sinusoidal gratings 
-tex_size = 300;
+tex_size = 400;
 grating1 = sinusoidGrating(f, tex_size);
 grating_tex_surround = Screen('MakeTexture', window, grating1 , [], [], [], [], glsl);
 
@@ -45,16 +45,27 @@ vbl = Screen('Flip', window);
 [x_center, y_center] = RectCenter(window_rect);
 
 KbName('UnifyKeyNames');
-cntrller = KeyboardGUIController(20, x_center, y_center, scrn_width, scrn_height);
 % cntrller.test()
-flicker_frequency = 3;
+flicker_frequency = 7;
 orientation_2 = 0;
-surround_contrast = .5;
+surround_contrast = 0;
 i=0;
 
-rect_color = [1 0 0];
-baseRect = [0 0 200 200];
-target_reached = false;
+target_color = [255 255 255];
+target_size = [0 0 200 200];
+target_hit = false;
+
+obstacle_color = [0 0 0];
+obstacle_size = [0 0 200 200];
+obstacle_hit = false;
+obstacle_2_color = [0 0 0];
+obstacle_2_size = [0 0 200 200];
+obstacle_2_hit = false;
+
+new_trial = false;
+cntrller = KeyboardGUIController(20, x_center, y_center, scrn_width, scrn_height);
+d = 4;    pos = 100;
+
 while cntrller.update()
     
     % Shift the grating by "shiftperframe" pixels per frame. We pass
@@ -67,14 +78,14 @@ while cntrller.update()
     yoffset = mod(i*shiftperframe, p);
     i=i+1;
     t = GetSecs;
-        
     foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
+    foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
+
 
     x_pos = cntrller.x_pos;
     y_pos = cntrller.y_pos;
     dest_rect = CenterRectOnPointd(src_rect, x_pos, y_pos);
     dest_rect_2 = CenterRectOnPointd(src_rect_2, x_pos, y_pos);
-
 
     if cntrller.flipped()
 
@@ -86,31 +97,61 @@ while cntrller.update()
 %         flip_delay = flip_delay + 1;
     end
     
-    % place box randomly
-    if i == 1 || target_reached
-        rand_pos_x = randi([0 scrn_width-200],1,1);
-        rand_pos_y = randi([0 scrn_height-200],1,1);
-        rect = CenterRectOnPointd(baseRect, rand_pos_x, rand_pos_y);
-        target_reached = false;
+    if  i == 1 || new_trial == true
+        new_pos = create_random_points_with_distance([x_pos y_pos] , scrn_width-200, scrn_height-200, d, 400);
     end
     
-    pos = 150;
-    % check that position of keyboard and 
-    if (rand_pos_x + pos > x_pos && rand_pos_x - pos < x_pos) && (rand_pos_y + pos > y_pos && rand_pos_y - pos  < y_pos)
-        target_reached = true;
-    end 
+    % target hitting logic
+    % place box randomly
+    if i == 1 || new_trial
+        target_pos_x = new_pos(2,1);
+        target_pos_y = new_pos(2,2);
+        target_rect = CenterRectOnPointd(target_size, target_pos_x, target_pos_y);
+        target_hit = false;
+        
+        obstacle_pos_x = new_pos(3,1);
+        obstacle_pos_y = new_pos(3,2);
+        obstacle_rect = CenterRectOnPointd(obstacle_size, obstacle_pos_x, obstacle_pos_y);
+        obstacle_hit = false;
+        
+        obstacle_2_pos_x = new_pos(4,1);
+        obstacle_2_pos_y = new_pos(4,2);
+        obstacle_2_rect = CenterRectOnPointd(obstacle_2_size, obstacle_2_pos_x, obstacle_2_pos_y);
+        obstacle_2_hit = false;
+        new_trial = false;
+    end
     
+    % check that position of keyboard and the target box are close to each
+    % other.
     
+    if (target_pos_x + pos > x_pos && target_pos_x - pos < x_pos) && (target_pos_y + pos > y_pos && target_pos_y - pos  < y_pos)
+        target_hit = true;
+        new_trial = true;
+    end
+    
+    if (obstacle_pos_x + pos > x_pos && obstacle_pos_x - pos < x_pos) && (obstacle_pos_y + pos > y_pos && obstacle_pos_y - pos  < y_pos)
+        obstacle_hit = true;
+        new_trial = true;
+    end
+    
+    % check that position of keyboard and the target box are close to each
+    % other.
+    if (obstacle_2_pos_x + pos > x_pos && obstacle_2_pos_x - pos < x_pos) && (obstacle_2_pos_y + pos > y_pos && obstacle_2_pos_y - pos  < y_pos)
+        obstacle_2_hit = true;
+        new_trial = true;
+    end
+    
+
     % Draw first grating texture, rotated by "orientation":
     Screen('DrawTexture', window, grating_tex_surround, src_rect, dest_rect, orientation, [], [], foveal_intensity*surround_contrast, [], [], [0, yoffset, 0, 0]);
-    
     % Draw 2nd grating texture, rotated by "orientation+45":
     Screen('DrawTexture', window, grating_tex_center, src_rect_2, dest_rect_2, orientation_2, [], [], foveal_intensity, [], [], [0, yoffset, 0, 0]);
-    
-    Screen('FillRect', window, rect_color, rect);
+    Screen('FillRect', window, target_color, target_rect);
+    Screen('FillRect', window, obstacle_color, obstacle_rect);
+    Screen('FillRect', window, obstacle_2_color, obstacle_2_rect);
 
     % Flip 'waitframes' monitor refresh intervals after last redraw.
-    vbl = Screen('Flipr', window, vbl + (waitframes - 0.5) * ifi);
+    vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
     
 
 end
