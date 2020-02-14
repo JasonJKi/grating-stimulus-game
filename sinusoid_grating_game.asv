@@ -1,161 +1,147 @@
 % close all; clear all;
-[window, scrn_width, scrn_height, glsl]= create_screen(0);
-window_rect = [0, 0, scrn_width, scrn_height];
+% 
+[window, scrn_width, scrn_height, glsl]= create_screen(); % generate window 
+[x_center, y_center] = RectCenter([0 0 scrn_width, scrn_height]); % screen center
 
-f=0.05;
-cyclespersecond=1;
-orientation = 0;
-
-% Create circular sinusoidal gratings 
-tex_size = 400;
-grating1 = sinusoidGrating(f, tex_size);
-grating_tex_surround = Screen('MakeTexture', window, grating1 , [], [], [], [], glsl);
-
-tex_size_2 = ceil(tex_size/3);
-grating2 = sinusoidGrating(f, tex_size_2);
-grating_tex_center = Screen('MakeTexture', window, grating2, [], [], [], [], glsl);
-
-% Definition of the drawn source rectorientation on the screen:
-visibletex_size=2*tex_size+1;
-src_rect=[0 0 visibletex_size visibletex_size];
-
-visible2tex_size = 2*tex_size_2+1;
-% Definition of the drawn source rectorientation on the screen:
-src_rect_2=[0 0 visible2tex_size visible2tex_size];
-
-% Query duration of monitor refresh interval:
-ifi=Screen('GetFlipInterval', window);
-
-waitframes = 1;
-waitduration = waitframes * ifi;
-
-% Recompute p, this time without the ceil() operation from above.
-% Otherwise we will get wrong drift speed due to rounding!
-p = 1/f; % pixels/cycle
-
-% Translate requested speed of the gratings (in cycles per second) into
-% a shift value in "pixels per frame", assuming given waitduration:
-shiftperframe = cyclespersecond * p * waitduration;
-
-% Perform initial Flip to sync us to the VBL and for getting an initial
-% VBL-Timestamp for our "WaitBlanking" emulation:
+% Perform initial Flip to sync us to the VBL and for getting an initial. VBL-Timestamp for our "WaitBlanking" emulation:
+ifi = Screen('GetFlipInterval', window);
 vbl = Screen('Flip', window);
 
-% Animation loop: Run until timeout or keypress.
-[x_center, y_center] = RectCenter(window_rect);
+% create flashing center-surround gratings
+size = 400;
+f=0.05;
+contrast = 0;
+orientation = 90;
+flicker_freq = 3;
+flip_time = ifi;
+surround_grating = FlashingGrating(size, f, contrast, orientation, flicker_freq, flip_time);
+surround_grating.makeTexture(window);
+
+size = 150;
+f=0.05;
+contrast = .5;
+orientation = 0;
+flicker_freq = 3;
+flip_time = ifi;
+center_grating = FlashingGrating(size, f, contrast, orientation, flicker_freq, flip_time);
+center_grating.makeTexture(window);
+
+% create boxes appearing on the screen.
+min_distance = size-50;
+game_state = GameState(scrn_width, scrn_height);
+vehicle_box = ScreenObject([200 200 200], [0 0 200 200]);
+target_box = ScreenObject([255 255 255], [0 0 200 200]);
+obstacle_box_1 = ScreenObject([100 100 100], [0 0 200 200]);
+obstacle_box_2 = ScreenObject([100 100 100], [0 0 200 200]);
+obstacle_box_3 = ScreenObject([100 100 100], [0 0 200 200]);
+
+eye_tracker = ScreenObject([55 0 0], [0 0 50 50]);
 
 KbName('UnifyKeyNames');
-% cntrller.test()
-flicker_frequency = 7;
-orientation_2 = 0;
-surround_contrast = 0;
-i=0;
-
-target_color = [255 255 255];
-target_size = [0 0 200 200];
-target_hit = false;
-
-obstacle_color = [0 0 0];
-obstacle_size = [0 0 200 200];
-obstacle_hit = false;
-obstacle_2_color = [0 0 0];
-obstacle_2_size = [0 0 200 200];
-obstacle_2_hit = false;
-
-new_trial = false;
 cntrller = KeyboardGUIController(20, x_center, y_center, scrn_width, scrn_height);
-d = 4;    pos = 100;
+% cntrller.test()
 
+%% Setup eyelink
+% make sure that we get gaze data from the Eyelink
+% open file to record data to
+el=EyelinkInitDefaults(window);
+WaitSecs(0.1);
+if EyelinkInit()~= 1; return; end
+
+Eyelink('command', 'link_sample_data = LEFT,RIGHT,GAZE,AREA');
+Eyelink('openfile', 'demo.edf');
+ 
+result1 = EyelinkDoTrackerSetup(el); % result2 = EyelinkDoDriftCorrect(eyelink);
+WaitSecs(0.1);
+Eyelink('StartRecording');
+eye_used = Eyelink('EyeAvailable'); % get eye that's tracked
+if eye_used == el.BINOCULAR; % if both eyes are tracked
+    eye_used = el.LEFT_EYE; % use left eye
+end
+Screen('Flip', window); % Screen('closeAll')
+
+i=0;
 while cntrller.update()
     
-    % Shift the grating by "shiftperframe" pixels per frame. We pass
-    % the pixel offset 'yoffset' as a parameter to
-    % Screen('DrawTexture'). The attached 'glsl' texture draw shader
-    % will apply this 'yoffset' pixel shift to the RGB or Luminance
-    % color channels of the texture during drawing, thereby shifting
-    % the gratings. Before drawing the shifted grating, it will mask it
-    % with the "unshifted" alpha mask values inside the Alpha channel:
-    yoffset = mod(i*shiftperframe, p);
-    i=i+1;
-    t = GetSecs;
-    foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
-    foveal_intensity = sin(t*2*pi*flicker_frequency)*127+128;
-
-
+    
+    error=Eyelink('CheckRecording');
+    if(error~=0)
+        break;
+    end
+    
+    if Eyelink( 'NewFloatSampleAvailable') > 0
+        % get the sample in the form of an event structure
+        evt = Eyelink( 'NewestFloatSample');
+        if eye_used ~= -1 % do we know which eye to use yet?
+            % if we do, get current gaze position from sample
+            x_eye = evt.gx(eye_used+1); % +1 as we're accessing MATLAB array
+            y_eye = evt.gy(eye_used+1);
+            mx = 0;
+            my = 0;
+            % do we have valid data and is the pupil visible?
+            if x_eye~=el.MISSING_DATA && y_eye~=el.MISSING_DATA && evt.pa(eye_used+1)>0
+                mx=x_eye;
+                my=y_eye;
+                disp(mx)
+            end
+        end
+    end
+        
     x_pos = cntrller.x_pos;
     y_pos = cntrller.y_pos;
-    dest_rect = CenterRectOnPointd(src_rect, x_pos, y_pos);
-    dest_rect_2 = CenterRectOnPointd(src_rect_2, x_pos, y_pos);
 
-    if cntrller.flipped()
+    vehicle_box.setPosition(x_pos, y_pos)
 
-        if orientation == 0
-            orientation = orientation_2 + 90;
-        else
-            orientation = 0;
-        end
-%         flip_delay = flip_delay + 1;
-    end
-    
-    if  i == 1 || new_trial == true
-        new_pos = create_random_points_with_distance([x_pos y_pos] , scrn_width-200, scrn_height-200, d, 400);
-    end
-    
-    % target hitting logic
     % place box randomly
-    if i == 1 || new_trial
-        target_pos_x = new_pos(2,1);
-        target_pos_y = new_pos(2,2);
-        target_rect = CenterRectOnPointd(target_size, target_pos_x, target_pos_y);
-        target_hit = false;
+    if i == 0 || game_state.is_new_trial
+        new_pos = game_state.generateRandomPosition(x_pos, y_pos, 5, 200);
         
-        obstacle_pos_x = new_pos(3,1);
-        obstacle_pos_y = new_pos(3,2);
-        obstacle_rect = CenterRectOnPointd(obstacle_size, obstacle_pos_x, obstacle_pos_y);
-        obstacle_hit = false;
+        target_box.setPosition(new_pos(2,1), new_pos(2,2));
+        obstacle_box_1.setPosition(new_pos(3,1), new_pos(3,2));        
+        obstacle_box_2.setPosition(new_pos(4,1), new_pos(4,2));        
+        obstacle_box_3.setPosition(new_pos(5,1), new_pos(5,2));
         
-        obstacle_2_pos_x = new_pos(4,1);
-        obstacle_2_pos_y = new_pos(4,2);
-        obstacle_2_rect = CenterRectOnPointd(obstacle_2_size, obstacle_2_pos_x, obstacle_2_pos_y);
-        obstacle_2_hit = false;
-        new_trial = false;
+        target_box.is_hit = false;
+        obstacle_box_1.is_hit = false;
+        obstacle_box_2.is_hit = false;
+        obstacle_box_3.is_hit = false;
+        
+        game_state.is_new_trial = false;
     end
     
     % check that position of keyboard and the target box are close to each
     % other.
-    
-    if (target_pos_x + pos > x_pos && target_pos_x - pos < x_pos) && (target_pos_y + pos > y_pos && target_pos_y - pos  < y_pos)
-        target_hit = true;
-        new_trial = true;
-    end
-    
-    if (obstacle_pos_x + pos > x_pos && obstacle_pos_x - pos < x_pos) && (obstacle_pos_y + pos > y_pos && obstacle_pos_y - pos  < y_pos)
-        obstacle_hit = true;
-        new_trial = true;
-    end
-    
-    % check that position of keyboard and the target box are close to each
-    % other.
-    if (obstacle_2_pos_x + pos > x_pos && obstacle_2_pos_x - pos < x_pos) && (obstacle_2_pos_y + pos > y_pos && obstacle_2_pos_y - pos  < y_pos)
-        obstacle_2_hit = true;
-        new_trial = true;
-    end
-    
+    game_state.checkBoxStatus(target_box.isHit(x_pos, y_pos, min_distance))
+    game_state.checkBoxStatus(obstacle_box_1.isHit(x_pos, y_pos, min_distance))
+    game_state.checkBoxStatus(obstacle_box_2.isHit(x_pos, y_pos, min_distance))
+    game_state.checkBoxStatus(obstacle_box_3.isHit(x_pos, y_pos, min_distance))
 
-    % Draw first grating texture, rotated by "orientation":
-    Screen('DrawTexture', window, grating_tex_surround, src_rect, dest_rect, orientation, [], [], foveal_intensity*surround_contrast, [], [], [0, yoffset, 0, 0]);
-    % Draw 2nd grating texture, rotated by "orientation+45":
-    Screen('DrawTexture', window, grating_tex_center, src_rect_2, dest_rect_2, orientation_2, [], [], foveal_intensity, [], [], [0, yoffset, 0, 0]);
-    Screen('FillRect', window, target_color, target_rect);
-    Screen('FillRect', window, obstacle_color, obstacle_rect);
-    Screen('FillRect', window, obstacle_2_color, obstacle_2_rect);
+    % draw textures
+    %1) flashing grating
+    surround_grating.drawTexture( x_pos, y_pos, window, i);
+    center_grating.drawTexture( x_pos, y_pos, window, i);
+    
+    % 2) game objects
+%     vehicle_box.drawTexture(window, 'FillRect')
+    target_box.drawTexture(window, 'FillRect')
+    obstacle_box_1.drawTexture(window, 'FillRect')
+    obstacle_box_2.drawTexture(window, 'FillRect')
+    obstacle_box_3.drawTexture(window, 'FillRect')
+    
+    % eye tracker
+    eye_tracker.setPosition(mx, my);
+    eye_tracker.drawTexture(window, 'FillOval')
 
+    
     % Flip 'waitframes' monitor refresh intervals after last redraw.
-    vbl = Screen('Flip', window, vbl + (waitframes - 0.5) * ifi);
+    vbl = Screen('Flip', winc
     
-
+    
+   c            dow, vbl + (1 - 0.5) * ifi);
+    i=i+1;
 end
-
+Eyelink('StopRecording');
+Eyelink('CloseFile');
 % The same commands wich close onscreen and offscreen windows also close textures.
 sca;
 

@@ -27,7 +27,7 @@ classdef KeyboardGUIController < handle
         
         function status = update(this)
             [keyIsDown,secs, keyCode] = KbCheck;
-            disp(find(keyCode))
+%             disp(find(keyCode))
             status = true;
             upDownLeftRight(this, keyCode)
             check_boundary(this)
