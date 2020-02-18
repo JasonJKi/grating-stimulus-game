@@ -3,7 +3,7 @@ points = init_point;
 d2 = d ^ 2;
 
 % Keep adding points until we have n points.
-while (size(points, 1) < n)
+while (size(points, 1) <= n)
 
     % Randomheight generate a new point
     point = [randi([0 width],1,1) randi([0 height],1,1)];
@@ -16,4 +16,6 @@ while (size(points, 1) < n)
         points = [points; point];
     end
 end
+
+points = points(2:end,:);
 

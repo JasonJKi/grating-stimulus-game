@@ -1,4 +1,4 @@
-function [window, scrn_width, scrn_height, glsl]= create_screen(screenNumber)
+function [window, scrn_width, scrn_height, glsl, ifi, vbl]= create_screen(screenNumber)
     AssertOpenGL
     
     % Get the list of screens and choose the one with the highest screen number.
@@ -26,6 +26,10 @@ function [window, scrn_width, scrn_height, glsl]= create_screen(screenNumber)
 
     Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glsl = MakeTextureDrawShader(window, 'SeparateAlphaChannel');
+
+    % Perform initial Flip to sync us to the VBL and for getting an initial. VBL-Timestamp for our "WaitBlanking" emulation:
+    ifi = Screen('GetFlipInterval', window);
+    vbl = Screen('Flip', window);
 
 %     sca;
 %     psychrethrow(psychlasterror);
