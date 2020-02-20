@@ -1,4 +1,4 @@
-classdef KeyboardGUIController < handle
+classdef KeyboardController < handle
     %KEYBOARDCONTRLLER Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -6,6 +6,9 @@ classdef KeyboardGUIController < handle
         key = Key();
         x_pos
         y_pos
+        
+        x_pos_prev;
+        y_pos_prev;
         step;
         current_key;
         
@@ -16,7 +19,7 @@ classdef KeyboardGUIController < handle
     end
     
     methods
-        function this = KeyboardGUIController(step,x_pos,y_pos,screen_width,screen_height)
+        function this = KeyboardController(step,x_pos,y_pos,screen_width,screen_height)
             this.step = step;
             this.x_pos = x_pos;
             this.y_pos = y_pos;
@@ -29,7 +32,7 @@ classdef KeyboardGUIController < handle
             [keyIsDown,secs, keyCode] = KbCheck;
 %             disp(find(keyCode))
             status = true;
-            upDownLeftRight(this, keyCode)
+            setPosition(this, keyCode);
             check_boundary(this)
 
             if keyCode(this.key.escape)
@@ -55,7 +58,10 @@ classdef KeyboardGUIController < handle
             end
         end
             
-        function upDownLeftRight(this, keyCode)
+        function setPosition(this, keyCode)
+            this.x_pos_prev = this.x_pos;
+            this.y_pos_prev = this.y_pos;
+
             if keyCode(this.key.left)
                 this.x_pos = this.x_pos - this.step;
             end
@@ -69,6 +75,16 @@ classdef KeyboardGUIController < handle
                 this.y_pos = this.y_pos + this.step;
             end
 
+        end
+        
+        function is_disabled = disableWithEyeTracker(this, x_eye, y_eye, max_distance)
+            eye_distance_from_fixation = sqrt((x_eye - this.x_pos)^2 + (y_eye - this.y_pos)^2); 
+            is_disabled = false;
+            if eye_distance_from_fixation > max_distance
+                this.x_pos = this.x_pos_prev;
+                this.y_pos = this.y_pos_prev;
+                is_disabled = true;
+            end
         end
 %         
 %         function upDownLeftRight(this, keyCode)

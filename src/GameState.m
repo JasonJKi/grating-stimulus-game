@@ -4,11 +4,11 @@ classdef GameState < handle
         is_new_trial = false;
         boundary_x;
         boundary_y;
-        
         score = 0;
    end
    
    methods
+       
        function this = GameState(width, height)
            this.boundary_x = width;
            this.boundary_y = height;
@@ -21,14 +21,14 @@ classdef GameState < handle
            new_pos = create_random_points_with_distance(ref_pos, width, height, num_pos, min_distance);
        end
        
+       function new_pos = generateRandomPoint(this, width, y_pos, min_distance)
+           x_pos = randi([0 width],1,1);
+           new_pos = [x_pos y_pos];
+       end
+       
        function updateScore(this, point)
            this.score = this.score + point;
        end
-%        function newTrial(this)
-%            if is_new_trial
-%            
-%            end
-%        end
        
        function checkBoxStatus(this, is_hit, point)
            if is_hit
@@ -36,6 +36,10 @@ classdef GameState < handle
                updateScore(this, point)
            end
        end
+   end
+   
+   methods (Static)
+
    end
    
 end

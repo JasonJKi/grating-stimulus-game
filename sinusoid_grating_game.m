@@ -1,18 +1,31 @@
-% close all; clear all;
+close all; clear all;
+setup install
 %% Create Screen
-[window, scrn_width, scrn_height, glsl, ifi, vbl]= create_screen(); % generate window 
+[window, scrn_width, scrn_height, glsl, ifi, vbl]= create_screen(1); % generate window 
 
-%% Screen Objects 
-% flashing center-surround gratings
+%% Flashing center-surround gratings
+is_passive = 0;
+
 flicker = CenterSurroundFlicker(window);
+f = 0.05;  orientation = 90;
 
+surround_size = 700; surround_flicker_f = 5; surround_contrast = .25;
+flicker.setSurround(surround_size, f, surround_contrast, orientation, surround_flicker_f, ifi)
+
+center_size = 350; center_flicker_f = 5; center_contrast = .5;
+flicker.setCenter(center_size, f, center_contrast, orientation, center_flicker_f, ifi);
+
+flicker.makeTexture(window);
+flicker.setBoundaryPoints([0 0 50 50], center_size*2);
+            
 % create boxes appearing on the screen.
-game_objects = GameObjects(4);
+game_objects = GameObjects(0);
 
 %% Game Control
 KbName('UnifyKeyNames');
 [x_center, y_center] = RectCenter([0 0 scrn_width, scrn_height]); % initial position screen center.
-game_controller = KeyboardGUIController(20, x_center, y_center, scrn_width, scrn_height);
+keyboard = KeyboardController(10, x_center, y_center, scrn_width, scrn_height);
+ai_controller = AIController(10, x_center, y_center, scrn_width, scrn_height);
 % game_controller.test()
 
 %% Game Logic
@@ -21,28 +34,36 @@ game_state = GameState(scrn_width, scrn_height);
 %% Setup eyelink
 eyelink = EyeLinkExperiment(window);
 eyelink.calibrate();
-eyelink.startRecord('111')
+eyelink.startRecord('demo')
 eyelink.sendMessage('Start');
 eyelink.setEyeShadow([25 0 0], [0 0 50 50]);
-
 i=0;
-while game_controller.update()
+
+while keyboard.update()
     
     % Run eyelink recording and on screen tracking shadow. 
     if eyelink.checkRecording()
         eyelink.getEvent()
         eyelink.sendMessage(num2str(i));
-        eyelink.drawEyeShadowTexture(window, 'FillOval')
     end
     
-    % get keyoboard position.
-    x_pos = game_controller.x_pos;
-    y_pos = game_controller.y_pos;
+    keyboard.disableWithEyeTracker(eyelink.x_pos, eyelink.y_pos, center_size);
+    ai_controller.disableWithEyeTracker(eyelink.x_pos, eyelink.y_pos, center_size);
+
+    if is_passive
+        % get keyoboard position.
+        x_pos = ai_controller.x_pos;
+        y_pos = ai_controller.y_pos;
+    else
+        x_pos = keyboard.x_pos;
+        y_pos = keyboard.y_pos;
+    end
     
     % set objects in random positions.
     if i == 0 || game_state.is_new_trial
-        new_pos = game_state.generateRandomPosition(x_pos, y_pos, game_objects.num_items, 200);
-        game_objects.setPosition(new_pos)
+    % scrn_obj_pos = game_state.generateRandomPosition(x_pos, y_pos, game_objects.num_items, 200);
+        scrn_obj_pos = game_state.generateRandomPoint(scrn_width, y_pos, 300);
+        game_objects.setPosition(scrn_obj_pos)
         game_state.is_new_trial = false;
     end
     
@@ -54,13 +75,19 @@ while game_controller.update()
     %1) flashing grating
     flicker.drawTexture(x_pos, y_pos, window, i);
     
-    % 2) game objects
+    % 2) game objects6566666666666666555555555555555555555555555
     game_objects.drawTexture(window, 'FillRect')
-    
-    
+        
+    % 3) eyetracker shadow
+    eyelink.drawEyeShadowTexture(window, 'FillOval')
+
     % Flip 'waitframes' monitor refresh intervals after last redraw.
+
+    ai_controller.followTarget(scrn_obj_pos(1))
+
     vbl = Screen('Flip', window, vbl + (1 - 0.5) * ifi);
     i=i+1;
+    
 end
 
 eyelink.receiveFile();

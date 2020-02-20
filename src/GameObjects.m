@@ -15,14 +15,16 @@ classdef GameObjects < handle
     methods
         function this = GameObjects(num_obstacles)
             this.target = ScreenObject([255 255 255], [0 0 200 200]);
+            
+            obstacles = [];
             for i =1:num_obstacles
                 obstacles(i) =  ScreenObject([100 100 100], [0 0 200 200]);
             end
             this.obstacle = obstacles;
-           
+
             this.num_obstacles = num_obstacles;
             this.num_items = num_obstacles + 1;
-            this.min_distance = 200-50;
+            this.min_distance = 50;
         end
         
         function setPosition(this, new_pos)
@@ -45,6 +47,7 @@ classdef GameObjects < handle
         
         function drawTexture(this, window, shape)
             this.target.drawTexture(window, shape)
+            
             for i =1:this.num_obstacles
                 this.obstacle(i).drawTexture(window, shape)
             end

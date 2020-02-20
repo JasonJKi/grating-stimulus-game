@@ -16,6 +16,7 @@ classdef EyeLinkExperiment < handle
         
         function this = EyeLinkExperiment(window)
             init(this, window)
+%             this.getEvent();
         end
         
         function init(this, window)

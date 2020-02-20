@@ -19,7 +19,7 @@ function [window, scrn_width, scrn_height, glsl, ifi, vbl]= create_screen(screen
     
     % Open a double buffered fullscreen window with a gray background:
     window =Screen('OpenWindow',screenNumber, black);
-    [scrn_width, scrn_height] = Screen('WindowSize', window);
+    [scrn_width, scrn_height] = Screen('WindowSize', screenNumber);
     
     % Enable alpha blending for typical drawing of masked textures:
     AssertGLSL;
