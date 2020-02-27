@@ -7,6 +7,7 @@ classdef FlashingGrating < handle
         freq;
         contrast;
         orientation;
+        size; 
         
         flicker_freq;
         drift_shift;
@@ -21,6 +22,7 @@ classdef FlashingGrating < handle
     
     methods
         function this = FlashingGrating(size, freq, contrast, orientation, flicker_freq, flip_time)
+            this.size = size;
             this.grating = sinusoidGrating(freq, size);
             this.src_rect = this.createRect(size);
             this.drift_shift = this.shiftPerFrame(flip_time, this.waitframes, freq);
@@ -40,7 +42,8 @@ classdef FlashingGrating < handle
                 
         function drawTexture(this,  x_pos, y_pos, window, i)
             phase = this.currentPhase(i, this.drift_shift, 1/this.freq);
-            intensity = this.currentIntensity(this.flicker_freq, this.contrast);
+            
+            intensity = this.sinusoidalIntensity(this.flicker_freq, this.contrast, GetSecs);
             this.dest_rect = CenterRectOnPointd(this.src_rect, x_pos, y_pos);
             Screen('DrawTexture', window, this.tex, this.src_rect, this.dest_rect, ...
                 this.orientation, [], [], intensity, [], [], [0, phase, 0, 0]);
@@ -51,7 +54,7 @@ classdef FlashingGrating < handle
     methods (Static)
         
         function src_rect = createRect(grating_size)
-            visible_grating_size=2*grating_size+1;
+            visible_grating_size = 2*grating_size+1;
             src_rect =[0 0 visible_grating_size visible_grating_size];
         end
         
@@ -65,10 +68,14 @@ classdef FlashingGrating < handle
             grating_shift = p * waitduration;
          end
         
-        function intensity = currentIntensity(flicker_freq, contrast)
-            t = GetSecs;
-            intensity = sin(t*2*pi*flicker_freq)*127*contrast+128;
+        function amplitude = sinusoidalIntensity(flicker_freq, contrast, t)
+%             t = GetSecs;
+            amplitude = sin(t*2*pi*flicker_freq)*(255*contrast);
+%             if amplitude > 255*contrast*.50
+%                 amplitude = 255*contrast;
+%             end
         end
+        
         
     end
     

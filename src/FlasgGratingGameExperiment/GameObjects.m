@@ -13,12 +13,12 @@ classdef GameObjects < handle
     end
     
     methods
-        function this = GameObjects(num_obstacles)
-            this.target = ScreenObject([255 255 255], [0 0 200 200]);
+        function this = GameObjects(num_obstacles, size)
+            this.target = ScreenObject([255 255 255], [0 0 size size]);
             
             obstacles = [];
             for i =1:num_obstacles
-                obstacles(i) =  ScreenObject([100 100 100], [0 0 200 200]);
+                obstacles(i) =  ScreenObject([100 100 100], [0 0 size size]);
             end
             this.obstacle = obstacles;
 

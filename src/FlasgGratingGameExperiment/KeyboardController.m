@@ -7,6 +7,9 @@ classdef KeyboardController < handle
         x_pos
         y_pos
         
+        x_pos_default
+        y_pos_default
+        
         x_pos_prev;
         y_pos_prev;
         step;
@@ -16,17 +19,27 @@ classdef KeyboardController < handle
         screen_height
         last_flip = true
         flip = true;
+        
+        is_escape;
+        is_space;
     end
     
     methods
         function this = KeyboardController(step,x_pos,y_pos,screen_width,screen_height)
+            KbName('UnifyKeyNames')
             this.step = step;
             this.x_pos = x_pos;
             this.y_pos = y_pos;
+            this.x_pos_default = x_pos;
+            this.y_pos_default = y_pos;
             this.screen_width = screen_width;
             this.screen_height = screen_height;
         end
         
+        function reset(this)
+            this.x_pos = this.x_pos_default;
+            this.y_pos = this.y_pos_default;
+        end
         
         function status = update(this)
             [keyIsDown,secs, keyCode] = KbCheck;
@@ -35,12 +48,20 @@ classdef KeyboardController < handle
             setPosition(this, keyCode);
             check_boundary(this)
 
+            this.is_escape = false;
             if keyCode(this.key.escape)
+                this.is_escape = true;
                 status = false;
             end
             
             if keyCode(this.key.space)
                 this.flip = ~this.flip;
+            end
+            
+            this.is_space = false;
+            if keyCode(this.key.space)
+                this.is_space = true;
+                status = false;
             end
         end
         

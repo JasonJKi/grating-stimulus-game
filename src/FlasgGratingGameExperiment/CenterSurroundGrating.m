@@ -1,4 +1,4 @@
-classdef CenterSurroundFlicker < handle
+classdef CenterSurroundGrating < handle
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
     
@@ -16,9 +16,8 @@ classdef CenterSurroundFlicker < handle
     end
     
     methods
-        function this = CenterSurroundFlicker(window)
+        function this = CenterSurroundGrating()
             % surround
-            this.window = window;
         end
         
         function setSurround(this, size, f, contrast, orientation, flicker_freq, flip_time)

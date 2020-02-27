@@ -31,6 +31,7 @@ function [window, scrn_width, scrn_height, glsl, ifi, vbl]= create_screen(screen
     ifi = Screen('GetFlipInterval', window);
     vbl = Screen('Flip', window);
 
+    pause(1)
 %     sca;
 %     psychrethrow(psychlasterror);
 %     return

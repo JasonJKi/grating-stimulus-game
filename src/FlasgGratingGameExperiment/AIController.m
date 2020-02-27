@@ -16,6 +16,9 @@ classdef AIController < handle
         screen_height
         last_flip = true
         flip = true;
+        
+        x_pos_default
+        y_pos_default
     end
     
     methods
@@ -26,10 +29,17 @@ classdef AIController < handle
             this.y_pos = y_pos;
             this.screen_width = screen_width;
             this.screen_height = screen_height;
+            
             this.x_pos_prev =  this.x_pos;
             this.y_pos_prev =  this.y_pos;
+            this.x_pos_default = x_pos;
+            this.y_pos_default = y_pos;
         end
         
+        function reset(this)
+            this.x_pos = this.x_pos_default;
+            this.y_pos = this.y_pos_default;
+        end        
         
         function followTarget(this, x_pos_target)
             this.x_pos_prev =  this.x_pos;

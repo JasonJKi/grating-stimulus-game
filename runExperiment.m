@@ -1,0 +1,58 @@
+close all; clear all;
+setup install
+
+%% setup eyelink,
+subject_name = 'demo'; 
+screen_num = 1;
+eyelink = EyeLinkExperiment();
+eyelink.calibrate(screen_num);
+eyelink.startRecord(subject_name);
+eyelink.createLSLStream()
+
+%% Set up game.
+monitor.distance = 27; monitor.width = 20.8;
+flash_grating_game = FlashGratingControlGame(monitor.distance, monitor.width);
+flash_grating_game.setEyelink(eyelink);
+flash_grating_game.createLSLStream();
+
+%% Make sure that the lab recorder is on.
+pauseToSetRecorder('is lab recorder set?')
+
+%% assign game sequence.
+flicker_types = { 'variable contrast', 'variable frequency', ...
+                'variable contrast', 'variable contrast', ...
+                'variable frequency', 'variable frequency'};
+            
+game_types = { 'static', 'static', ...
+            'active control', 'passive pursuit', ...
+            'active control', 'passive pursuit'};
+
+%% Exp 1; variable contrast (static)
+trial_duration = 5; 
+pause_duration = 1;
+num_exp = length(flicker_types);
+indx = randperm(num_exp); 
+
+for i = 1:num_exp
+    
+    r = indx(i); 
+    
+    flicker_type = flicker_types{r};
+    game_type = game_types{r};
+    
+    if strcmp(flicker_type,'calibrate')
+        eyelink.calibrate(screen_num);
+        eyelink.startRecord(subject_name);
+        return
+    end
+        
+
+    exp_param = setstructfields(flickerParam(flicker_type), ...
+                                gameParam(game_type, trial_duration, pause_duration));
+    
+    makeWindow(flash_grating_game, screen_num);
+    flash_grating_game.showGameInstructions(game_type, game_type)
+    runTrials(flash_grating_game, exp_param);
+    sca
+end
+
