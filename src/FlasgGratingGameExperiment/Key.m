@@ -11,6 +11,11 @@ classdef Key
         escape = KbName('ESCAPE');
         space = KbName('SPACE');
 
+        one = KbName('1');
+        two = KbName('2');
+        three = KbName('3');
+        four = KbName('4');
+
     end
     
     methods

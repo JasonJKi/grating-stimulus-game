@@ -210,17 +210,10 @@ classdef FlashGratingControlGame < handle
                 i=i+1;
             end
             
-                
+            this.flicker_grating.drawAllBoundaryBoxes(x_pos, y_pos, window);
             sendLSLTriggerStream(this, this.end_code)
 
             this.keyboard.reset();
-            this.x_pos = this.keyboard.x_pos;
-            this.y_pos = this.keyboard.y_pos;
-            
-            correct_order = this.flicker_grating.color_order;
-            this.flicker_grating.drawAllBoundaryBoxes(this.x_pos, this.y_pos, this.window, correct_order);
-            answer = this.keyboard.answerRecorder(5);
-            
             this.ai_controller.reset();
             
             Screen('Flip', this.window)

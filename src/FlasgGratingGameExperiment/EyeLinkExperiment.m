@@ -11,6 +11,8 @@ classdef EyeLinkExperiment < handle
         
         eye_shadow
         lsl
+        
+        is_dummy_mode = false;
     end
     
     methods 
@@ -23,7 +25,13 @@ classdef EyeLinkExperiment < handle
         
         function init(this)
             WaitSecs(0.1);
-            if EyelinkInit()== 1; this.status = 1; end
+            [is_init, is_dummy] = EyelinkInit();
+            if is_init
+                this.status = 1; 
+                if is_dummy
+                    this.is_dummy_mode = true;
+                end
+            end
         end
         
         function is_calibrated = calibrate(this, win_num)
@@ -102,6 +110,9 @@ classdef EyeLinkExperiment < handle
         end
         
         function sendLSLStream(this)
+            if this.is_dummy_mode
+                return
+            end
             data = [];
             for i = 1:length(this.lsl.labels)
                data = [data this.event.(this.lsl.labels{i})];

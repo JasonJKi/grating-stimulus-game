@@ -5,6 +5,10 @@ classdef GameState < handle
         boundary_x;
         boundary_y;
         score = 0;
+        
+        fixed_pos
+        x_lim
+        y_lim
    end
    
    methods
@@ -12,6 +16,7 @@ classdef GameState < handle
        function this = GameState(width, height)
            this.boundary_x = width;
            this.boundary_y = height;
+           generateFixedPosition(this, 400)
        end
    
        function new_pos = generateRandomPosition(this, x_pos, y_pos, num_pos, min_distance)
@@ -39,6 +44,24 @@ classdef GameState < handle
            x_pos = rand_pos(idx);
            y_pos = this.boundary_y/2;
            new_pos = [x_pos y_pos];
+       end
+       
+       function generateFixedPosition(this, distance)
+           %            min_distance = 200;
+           x = this.boundary_x;
+           y = this.boundary_y;
+           pos_x = [0 + distance, x - distance];
+           pos_y = [y/2, y/2];
+          
+           for i = 1:length(pos_x)
+               this.fixed_pos(i, :) = [pos_x(i), pos_y(i)];
+           end
+           this.x_lim =pos_x;
+           this.y_lim =pos_y;
+       end
+       
+       function pos = pickRandomFixedPosition(this)
+           pos = this.fixed_pos(Randi(length(this.fixed_pos),1),:);
        end
        
        function updateScore(this, point)

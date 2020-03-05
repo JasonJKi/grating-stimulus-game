@@ -22,11 +22,16 @@ classdef KeyboardController < handle
         
         is_escape;
         is_space;
+        
+        % boundaries
+        x_min
+        x_max
+        y_min
+        y_max
     end
     
     methods
         function this = KeyboardController(step,x_pos,y_pos,screen_width,screen_height)
-            KbName('UnifyKeyNames')
             this.step = step;
             this.x_pos = x_pos;
             this.y_pos = y_pos;
@@ -34,6 +39,7 @@ classdef KeyboardController < handle
             this.y_pos_default = y_pos;
             this.screen_width = screen_width;
             this.screen_height = screen_height;
+            setBoundary(this, [0 screen_width], [0 screen_height]);
         end
         
         function reset(this)
@@ -65,17 +71,25 @@ classdef KeyboardController < handle
             end
         end
         
+        function setBoundary(this, x_lim, y_lim)
+            this.x_min = x_lim(1);
+            this.x_max = x_lim(2);
+
+            this.y_min = y_lim(1);
+            this.y_max = y_lim(2);
+        end
+
         function check_boundary(this)
-            if this.x_pos < 0
-                this.x_pos = 0;
-            elseif this.x_pos > this.screen_width
-                this.x_pos =  this.screen_width;
+            if this.x_pos < this.x_min
+                this.x_pos = this.x_min;
+            elseif this.x_pos > this.x_max
+                this.x_pos =  this.x_max;
             end
             
-            if this.y_pos < 0
-                this.y_pos = 0;
-            elseif this.y_pos >  this.screen_height
-                this.y_pos =  this.screen_height;
+            if this.y_pos < this.y_min
+                this.y_pos = this.y_min;
+            elseif this.y_pos > this.y_max
+                this.y_pos = this.y_max;
             end
         end
             
@@ -137,7 +151,27 @@ classdef KeyboardController < handle
             end
         end
         
+        function answer = answerRecorder(this, timer)
+            answer = [];
+            time = 0; tic
+            while ~isempty(answer) || time < timer
+                [~,~, keyCode] = KbCheck;
+                if keyCode(this.key.one)
+                    answer = 1;
+                elseif keyCode(this.key.two)
+                    answer = 2;
+                elseif keyCode(this.key.three)
+                    answer = 3;
+                elseif keyCode(this.key.four)
+                    answer = 4;
+%                 elseif keyCode(this.key.five)
+%                     answer = 5;
+                end
+                time = toc;
+            end
+        end
     end
+    
     methods (Access = private, Static)
         function [keyCode] = kbCheck()
             [~,~, keyCode] = KbCheck;

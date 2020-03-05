@@ -1,13 +1,15 @@
 close all; clear all;
 setup install
+KbName('UnifyKeyNames')
 
 %% setup eyelink,
 subject_name = 'demo'; 
 screen_num = 1;
-eyelink = EyeLinkExperiment();
-eyelink.calibrate(screen_num);
-eyelink.startRecord(subject_name);
-eyelink.createLSLStream()
+eyelink =[];
+% eyelink = EyeLinkExperiment();
+% eyelink.calibrate(screen_num);
+% eyelink.startRecord(subject_name);
+% eyelink.createLSLStream()
 
 %% Set up game.
 monitor.distance = 27; monitor.width = 20.8;
@@ -35,7 +37,7 @@ indx = randperm(num_exp);
 
 for i = 1:num_exp
     
-    r = indx(i); 
+    r = indx(i);
     
     flicker_type = flicker_types{r};
     game_type = game_types{r};
@@ -45,13 +47,13 @@ for i = 1:num_exp
         eyelink.startRecord(subject_name);
         return
     end
-        
-
-    exp_param = setstructfields(flickerParam(flicker_type), ...
-                                gameParam(game_type, trial_duration, pause_duration));
+    
+    flicker_param = flickerParam(flicker_type);
+    game_param = gameParam(game_type, trial_duration, pause_duration);
+    exp_param = setstructfields(flicker_param, game_param);
     
     makeWindow(flash_grating_game, screen_num);
-    flash_grating_game.showGameInstructions(game_type, game_type)
+%     showGameInstructions(flash_grating_game, game_type, game_type);
     runTrials(flash_grating_game, exp_param);
     sca
 end

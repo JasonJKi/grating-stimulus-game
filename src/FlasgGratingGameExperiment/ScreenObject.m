@@ -35,5 +35,13 @@ classdef ScreenObject < handle
             Screen(fillType, window, this.color, this.rect_pos)
         end
         
+        function drawTextureColor(this, window, color, fillType)
+            Screen(fillType, window, color, this.rect_pos)
+        end
+        
+        function drawOvalFrame(this, window, color, width)
+            Screen('FrameOval', window, color, this.rect_pos, width)
+        end
+        
     end
 end
