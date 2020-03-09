@@ -97,10 +97,10 @@ classdef KeyboardController < handle
             this.x_pos_prev = this.x_pos;
             this.y_pos_prev = this.y_pos;
 
-            if keyCode(this.key.left)
+            if keyCode(this.key.left) || keyCode(this.key.left_numpad)
                 this.x_pos = this.x_pos - this.step;
             end
-            if keyCode(this.key.right)
+            if keyCode(this.key.right) || keyCode(this.key.right_numpad)
                 this.x_pos = this.x_pos + this.step;
             end
             if keyCode(this.key.up)
@@ -152,9 +152,9 @@ classdef KeyboardController < handle
         end
         
         function answer = answerRecorder(this, timer)
-            answer = [];
-            time = 0; tic
-            while ~isempty(answer) || time < timer
+            answer = 0;
+            time = 0; tic;
+            while (answer == 0) && time < timer 
                 [~,~, keyCode] = KbCheck;
                 if keyCode(this.key.one)
                     answer = 1;
@@ -162,10 +162,8 @@ classdef KeyboardController < handle
                     answer = 2;
                 elseif keyCode(this.key.three)
                     answer = 3;
-                elseif keyCode(this.key.four)
-                    answer = 4;
-%                 elseif keyCode(this.key.five)
-%                     answer = 5;
+%                 elseif keyCode(this.key.four)
+%                     answer = 4;
                 end
                 time = toc;
             end
@@ -173,9 +171,9 @@ classdef KeyboardController < handle
     end
     
     methods (Access = private, Static)
-        function [keyCode] = kbCheck()
-            [~,~, keyCode] = KbCheck;
-        end
+%         function [keyCode] = kbCheck()
+%             [~,~, keyCode] = KbCheck;
+%         end
     end
         
 end

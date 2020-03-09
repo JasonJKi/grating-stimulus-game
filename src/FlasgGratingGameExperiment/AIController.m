@@ -46,8 +46,11 @@ classdef AIController < handle
             this.y_pos_prev =  this.y_pos;
             if this.x_pos > x_pos_target 
                  this.x_pos = this.x_pos - this.step;
+%                  disp(-x_pos_target)
             else
                 this.x_pos = this.x_pos + this.step;
+%                 disp(x_pos_target)
+
             end
             
         end

@@ -7,7 +7,10 @@ classdef Key
         up = KbName('UpArrow');
         down = KbName('DownArrow');
         left = KbName('LeftArrow');
-        right = KbName('RightArrow');   
+        right = KbName('RightArrow');
+        left_numpad = KbName('4');
+        right_numpad = KbName('6');
+
         escape = KbName('ESCAPE');
         space = KbName('SPACE');
 

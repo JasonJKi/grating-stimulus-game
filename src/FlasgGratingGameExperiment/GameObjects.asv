@@ -60,22 +60,25 @@ classdef GameObjects < handle
         end
         
         function is_hit = checkItemStatus(this, game_state, x_pos, y_pos)
-            is_hit = false;
-            for i = 1:this.num_items
-                item_hit = this.items(i).isHit(x_pos, y_pos, this.min_distance);
-                if item_hit
-                    is_hit = item_hit;
-                    game_state.current_hit_item_index = i;
+                is_hit = false;
+                for i = 1:this.num_items
+                    item_hit = this.items(i).isHit(x_pos, y_pos, this.min_distance);
+                    if item_hit
+                        is_hit = item_hit;
+                        this.current_hit_item_index = i;
+                    end
+                    
+                    if this.current_hit_item_index ~= this.prev_hit_item_index
+                        updateScore(game_state, 1)
+                        this.prev_hit_item_index = this.current_hit_item_index;
+                    end
                 end
-                
-                updateScore(game_state, 1)
-            end
-            %                 disp(is_hit)
-            %                 game_state.checkBoxStatus(this.items, -1);
-            this.target.isHit(x_pos, y_pos, this.min_distance);
+%                 disp(is_hit)
+%                 game_state.checkBoxStatus(this.items, -1);
+                this.target.isHit(x_pos, y_pos, this.min_distance);
         end
         
-        function drawTexture(this, window, shape)
+        function drawTexture(this, window, shape)            
             for i =1:this.num_items
                 this.items(i).drawTexture(window, shape)
             end

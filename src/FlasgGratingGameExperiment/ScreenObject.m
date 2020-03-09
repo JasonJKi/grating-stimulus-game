@@ -8,6 +8,7 @@ classdef ScreenObject < handle
         is_hit = false;
         x_pos = 0;
         y_pos = 0;
+        pos
     end
     
     methods
@@ -25,22 +26,28 @@ classdef ScreenObject < handle
         end
         
         function status = isHit(this, x_pos, y_pos, boundary)
-            if (this.x_pos + boundary > x_pos && this.x_pos - boundary < x_pos) && (this.y_pos + boundary > y_pos && this.y_pos - boundary  < y_pos)
-                this.is_hit = true;
+            x_min = this.x_pos - boundary;
+            x_max = this.x_pos + boundary;
+            y_min = this.y_pos - boundary;
+            y_max = this.y_pos + boundary;
+            if (x_max > x_pos && x_min < x_pos) && (y_max > y_pos && y_min < y_pos)
+                status = true;
+            else
+                status = false;
             end
-            status = this.is_hit;
+            this.is_hit = status;
         end
         
         function drawTexture(this, window, fillType)
-            Screen(fillType, window, this.color, this.rect_pos)
+            Screen(fillType, window, this.color, this.rect_pos);
         end
         
         function drawTextureColor(this, window, color, fillType)
-            Screen(fillType, window, color, this.rect_pos)
+            Screen(fillType, window, color, this.rect_pos);
         end
         
         function drawOvalFrame(this, window, color, width)
-            Screen('FrameOval', window, color, this.rect_pos, width)
+            Screen('FrameOval', window, color, this.rect_pos, width);
         end
         
     end

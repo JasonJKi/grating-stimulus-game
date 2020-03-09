@@ -20,6 +20,8 @@ classdef EyeLinkExperiment < handle
         function this = EyeLinkExperiment()
             init(this)
             setEyeShadow(this, [25 0 0], [0 0 50 50]);
+%             this.el = EyelinkInitDefaults();
+
 %             this.getEvent();
         end
         
@@ -36,8 +38,8 @@ classdef EyeLinkExperiment < handle
         
         function is_calibrated = calibrate(this, win_num)
             [window]= create_screen(win_num); % generate window 
-
             this.el = EyelinkInitDefaults(window);
+
             is_calibrated = EyelinkDoTrackerSetup(this.el);
 %             is_calibrated = EyelinkDoDriftCorrection(this.el);
             sca; 
