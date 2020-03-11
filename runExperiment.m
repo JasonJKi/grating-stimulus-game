@@ -5,7 +5,7 @@ KbName('UnifyKeyNames')
 %% setup eyelink,
 subject_name = 'demo'; 
 screen_num = 1;
-% eyelink =[];
+eyelink =[];
 eyelink = EyeLinkExperiment();
 eyelink.calibrate(screen_num);
 eyelink.startRecord(subject_name);
@@ -28,7 +28,7 @@ pauseToSetRecorder('is lab recorder set?')
 % game_types = { 'static', 'static', ...
 %             'active control', 'passive pursuit', ...
 %             'active control', 'passive pursuit'};
-flicker_types = {'constant', 'constant', 'constant'};
+flicker_types = {'constant', 'constant'};
 game_types = {'mine sweeper', 'mine sweeper watching'};
 % , 'static', 'left and right control','left and right passive pursuit', 'mine sweeper'};
 %% Exp 1; variable contrast (static)
@@ -55,13 +55,14 @@ for i = 1:num_exp
     exp_param = setstructfields(flicker_param, game_param);
     
     makeWindow(flash_grating_game, screen_num);
-    showGameInstructions(flash_grating_game, game_type);
+%     showGameInstructions(flash_grating_game, game_type);
     runTrials(flash_grating_game, exp_param);
-    sca
+%     sca
     
 %     ii = ii + 1;
 end
-
+sca
+    
     
 
 

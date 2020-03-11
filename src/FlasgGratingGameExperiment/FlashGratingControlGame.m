@@ -50,7 +50,7 @@ classdef FlashGratingControlGame < handle
             setController(this, this.monitor.px_width, this.monitor.px_height)
             
             this.target_size = 200;
-            num_items = 30;
+            num_items = 25;
             % this.game_objects = targetsLeftRight(GameObjects(this.target_size));
             % this.game_state = moveLeftRight(GameState(this.monitor.px_width, this.monitor.px_height), 700);
             this.game_objects = randomObjectsAndTargets(GameObjects(this.target_size),100,num_items);
@@ -230,8 +230,8 @@ classdef FlashGratingControlGame < handle
 %             [correct_answer, x_lim, y_lim] = this.attention_circle.drawAttentionCircleSurvey(this.x_pos, this.y_pos, this.window);
 %             answer = this.keyboard.answerRecorder(5);
 %             is_correct = drawOutlineOverTheAnswer(answer, correct_answer, x_lim, y_lim, this.window);
-%             this.attention_circle.addScore(is_correct);
-            response = GetEchoString(this.window, 'How many mines did you find?\n(Input number with the keypad)',this.keyboard.x_pos,this.keyboard.y_pos,[255 255 255],[0 0 0], 1);
+%           1234  this.attention_circle.addScore(is_correct);
+            response = GetEchoString(this.window, 'How many mines did you find? \n (Input number with the keypad)',this.keyboard.x_pos,this.keyboard.y_pos,[255 255 255],[0 0 0], 1);
             response = str2num(response);
             answer = this.game_state.score;
             sendLSLScore(this, answer, response)
