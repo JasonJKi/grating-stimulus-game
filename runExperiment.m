@@ -5,11 +5,11 @@ KbName('UnifyKeyNames')
 %% setup eyelink,
 subject_name = 'demo'; 
 screen_num = 1;
-eyelink =[];
-% eyelink = EyeLinkExperiment();
-% eyelink.calibrate(screen_num);
-% eyelink.startRecord(subject_name);
-% eyelink.createLSLStream()
+% eyelink =[];
+eyelink = EyeLinkExperiment();
+eyelink.calibrate(screen_num);
+eyelink.startRecord(subject_name);
+eyelink.createLSLStream()
 
 %% Set up game.
 monitor.distance = 27; monitor.width = 20.8;
@@ -29,14 +29,16 @@ pauseToSetRecorder('is lab recorder set?')
 %             'active control', 'passive pursuit', ...
 %             'active control', 'passive pursuit'};
 flicker_types = {'constant', 'constant', 'constant'};
-game_types = {'mine sweeper', 'static', 'left and right control','left and right passive pursuit', 'mine sweeper'};
+game_types = {'mine sweeper', 'mine sweeper watching'};
+% , 'static', 'left and right control','left and right passive pursuit', 'mine sweeper'};
 %% Exp 1; variable contrast (static)
-trial_duration = 5; 
+trial_duration = 10; 
 pause_duration = 1;
 num_exp = length(flicker_types);
 indx = 1:num_exp;
 % indx = randperm(num_exp); 
 num_repeats = 20;
+
 for i = 1:num_exp
     
     r = indx(i);
@@ -53,12 +55,14 @@ for i = 1:num_exp
     exp_param = setstructfields(flicker_param, game_param);
     
     makeWindow(flash_grating_game, screen_num);
-%     showGameInstructions(flash_grating_game, game_type, i);
+    showGameInstructions(flash_grating_game, game_type);
     runTrials(flash_grating_game, exp_param);
     sca
     
 %     ii = ii + 1;
 end
-sca
+
+    
+
 
 % 

@@ -31,7 +31,7 @@ classdef KeyboardController < handle
     end
     
     methods
-        function this = KeyboardController(step,x_pos,y_pos,screen_width,screen_height)
+        function this = KeyboardController(step, x_pos,y_pos,screen_width,screen_height)
             this.step = step;
             this.x_pos = x_pos;
             this.y_pos = y_pos;

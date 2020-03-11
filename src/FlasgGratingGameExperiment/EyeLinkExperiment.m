@@ -13,13 +13,21 @@ classdef EyeLinkExperiment < handle
         lsl
         
         is_dummy_mode = false;
+        
+        is_init = false;
     end
     
     methods 
         
         function this = EyeLinkExperiment()
-            init(this)
-            setEyeShadow(this, [25 0 0], [0 0 50 50]);
+            try 
+                init(this)
+                setEyeShadow(this, [25 0 0], [0 0 50 50]);
+               
+            catch
+                warning('eyelink mex file not found. starting the game without eye tracking.')
+                this.is_dummy_mode = true;
+            end
 %             this.el = EyelinkInitDefaults();
 
 %             this.getEvent();
@@ -33,25 +41,32 @@ classdef EyeLinkExperiment < handle
                 if is_dummy
                     this.is_dummy_mode = true;
                 end
-            end
+            end            
         end
         
         function is_calibrated = calibrate(this, win_num)
-            [window]= create_screen(win_num); % generate window 
-            this.el = EyelinkInitDefaults(window);
-
-            is_calibrated = EyelinkDoTrackerSetup(this.el);
-%             is_calibrated = EyelinkDoDriftCorrection(this.el);
-            sca; 
-            WaitSecs(0.1);
+            if this.is_dummy_mode
+                is_calibrated = false;
+            else
+                [window]= create_screen(win_num); % generate window
+                this.el = EyelinkInitDefaults(window);
+                
+                is_calibrated = EyelinkDoTrackerSetup(this.el);
+                %             is_calibrated = EyelinkDoDriftCorrection(this.el);
+                sca;
+                WaitSecs(0.1);
+            end
         end
         
         function startRecord(this, filename)
+            if this.is_dummy_mode
+            else
             Eyelink('command', 'link_sample_data = LEFT,RIGHT,GAZE,AREA');
             checkLeftRightEye(this)
             if this.status == 1
                 Eyelink('OpenFile', [filename '.edf']);
                 Eyelink('StartRecording');
+            end
             end
         end
        

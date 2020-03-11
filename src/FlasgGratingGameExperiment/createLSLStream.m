@@ -1,5 +1,5 @@
 function [outlet, info] = createLSLStream(name,type,channelcount,samplingrate,channelformat,sourceid)
-addpath(genpath('C:\Users\Jason\STIM2EEG-LAB\MATLAB-lsl'))
+% addpath(genpath('C:\Users\Jason\STIM2EEG-LAB\MATLAB-lsl'))
 % make a new stream outlet
 disp('Creating a new stream...');
 info = lsl_streaminfo(lsl_loadlib(), name, type, channelcount, samplingrate, channelformat, sourceid);

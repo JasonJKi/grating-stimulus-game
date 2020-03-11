@@ -3,7 +3,6 @@ classdef FlashGratingControlGame < handle
     properties
         window
         flicker_grating
-        
         % controllers
         keyboard
         eyelink
@@ -23,7 +22,8 @@ classdef FlashGratingControlGame < handle
         is_obj_disabled = false;
         is_eyeshadow_disabled = true;
         is_disable_control_with_eyetracker = true;
-        
+        is_quit = false;
+
         target_size
         
         x_pos = 0
@@ -49,8 +49,8 @@ classdef FlashGratingControlGame < handle
             
             setController(this, this.monitor.px_width, this.monitor.px_height)
             
-            this.target_size = 100;
-            num_items = 25;
+            this.target_size = 200;
+            num_items = 30;
             % this.game_objects = targetsLeftRight(GameObjects(this.target_size));
             % this.game_state = moveLeftRight(GameState(this.monitor.px_width, this.monitor.px_height), 700);
             this.game_objects = randomObjectsAndTargets(GameObjects(this.target_size),100,num_items);
@@ -90,9 +90,13 @@ classdef FlashGratingControlGame < handle
         end
 
         function makeWindow(this, screen)
+            if this.is_quit
+                return
+            end
             if nargin < 2
                 screen = 0;
             end
+            
             
             try
                 info = Screen('GetWindowInfo', this.window);
@@ -129,10 +133,11 @@ classdef FlashGratingControlGame < handle
             [x_center, y_center] = RectCenter([0 0 px_width, px_height]); % initial position screen center.
             this.keyboard = KeyboardController(this.pos_step, x_center, y_center, px_width, px_height);
             this.ai_controller = AIController(this.pos_step, x_center, y_center, px_width, px_height);
+%             this.mouse_controller = MouseController(x_center, y_center, px_width, px_height);
         end        
 
         function createLSLStream(this)
-            this.lsl.labels = {'x_pos', 'y_pos', 'surround contrast', 'surround freq', 'center contrast', 'center freq' , 'keyboard controlled', 'game_type'};
+            this.lsl.labels = {'x_pos', 'y_pos', 'surround contrast', 'surround freq', 'center contrast', 'center freq' , 'keyboard controlled', 'game_type', 'correct answer', 'response'};
             this.lsl.outlet = createLSLStream('GameEvents', 'Trigger', 8, 100,'cf_float32','22222123');
             this.lsl.default_event = ones(1, length(this.lsl.labels));
         end
@@ -151,16 +156,18 @@ classdef FlashGratingControlGame < handle
             % mark the start event code for lsl stream
             sendLSLTriggerStream(this, this.start_code)           
             while this.keyboard.update() && (current_time < end_time)
-
+                
                 % Run eyelink recording and on screen tracking shadow.
-                if ~isempty(eye) && eye.checkRecording() && Eyelink('IsConnected')
-                    eye.getEvent()
-                    eye.sendMessage(num2str(i));
-                    eye.sendLSLStream()
-                    
-                    if this.is_disable_control_with_eyetracker
-                        this.keyboard.disableWithEyeTracker(eye.x_pos, eye.y_pos, this.target_size + 75);
-                        this.ai_controller.disableWithEyeTracker(eye.x_pos, eye.y_pos, this.target_size + 75);
+                if ~isempty(eye) &&  ~eye.is_dummy_mode
+                    if eye.checkRecording()
+                        eye.getEvent()
+                        eye.sendMessage(num2str(i));
+                        eye.sendLSLStream()
+                        
+                        if this.is_disable_control_with_eyetracker
+                            this.keyboard.disableWithEyeTracker(eye.x_pos, eye.y_pos, this.target_size + 75);
+                            this.ai_controller.disableWithEyeTracker(eye.x_pos, eye.y_pos, this.target_size + 75);
+                        end
                     end
                 end
 
@@ -224,14 +231,19 @@ classdef FlashGratingControlGame < handle
 %             answer = this.keyboard.answerRecorder(5);
 %             is_correct = drawOutlineOverTheAnswer(answer, correct_answer, x_lim, y_lim, this.window);
 %             this.attention_circle.addScore(is_correct);
-            
+            response = GetEchoString(this.window, 'How many mines did you find?\n(Input number with the keypad)',this.keyboard.x_pos,this.keyboard.y_pos,[255 255 255],[0 0 0], 1);
+            response = str2num(response);
+            answer = this.game_state.score;
+            sendLSLScore(this, answer, response)
             this.ai_controller.reset();
-            
             Screen('Flip', this.window)
             if this.keyboard.is_escape
                 sca;
-                Eyelink('StopRecording');
-                Eyelink('CloseFile');
+                this.is_quit = true;
+                if this.eyelink.status == 1
+                    Eyelink('StopRecording');
+                    Eyelink('CloseFile');
+                end
                 return
             end
             
@@ -243,8 +255,8 @@ classdef FlashGratingControlGame < handle
             this.game_state.is_new_trial = true;
         end
         
-        function showGameInstructions(this, type, ii)
-            showGameInstructions(type, this.window, ii)
+        function showGameInstructions(this, type)
+            showGameInstructions(type, this.window)
         end
         
         function setEyelink(this, eye)
@@ -256,7 +268,12 @@ classdef FlashGratingControlGame < handle
         end
         
         function sendLSLStream(this)
-            this.event_code = [this.x_pos, this.y_pos, this.trial_info];
+            this.event_code = [this.x_pos, this.y_pos, this.trial_info -1 -1];
+            this.lsl.outlet.push_sample(this.event_code');
+        end
+        
+        function sendLSLScore(this, answer, response)
+            this.event_code = [0, 0, this.trial_info, answer, response];
             this.lsl.outlet.push_sample(this.event_code');
         end
         
@@ -268,11 +285,17 @@ classdef FlashGratingControlGame < handle
         end
         
         function runTrials(this, trial_params)
+            if this.is_quit
+                return
+            end
             num_trials = length(trial_params.surround_contrast);
             this.is_keyboard_controlled = trial_params.is_active;
             this.is_obj_disabled = trial_params.is_obj_disabled;
             r = randperm(num_trials); 
             for ii = 1:num_trials
+                if this.is_quit
+                    break
+                end
                 trial = r(ii);
                 sc = trial_params.surround_contrast(trial);
                 sf = trial_params.surround_flicker(trial);
@@ -285,6 +308,7 @@ classdef FlashGratingControlGame < handle
                 setTrialInfo(this, flicker_params, trial_params)
                 run(this, trial_params.trial_duration)
                 pause(trial_params.pause_duration)
+                
             end
             sendLSLTriggerStream(this, -10000 - this.attention_circle.score)
             this.attention_circle.score = 0;

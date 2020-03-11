@@ -66,9 +66,9 @@ classdef GameObjects < handle
                 if item_hit
                     is_hit = item_hit;
                     game_state.current_hit_item_index = i;
+                    updateScore(game_state, 1)
                 end
                 
-                updateScore(game_state, 1)
             end
             %                 disp(is_hit)
             %                 game_state.checkBoxStatus(this.items, -1);
