@@ -86,7 +86,6 @@ classdef GameState < handle
            if this.current_hit_item_index ~= this.prev_hit_item_index
                
                this.score = this.score + point;
-               this.prev_hit_item_index = this.current_hit_item_index;
                
                disp(this.score)
            end

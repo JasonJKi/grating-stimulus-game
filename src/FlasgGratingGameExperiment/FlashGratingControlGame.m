@@ -13,6 +13,7 @@ classdef FlashGratingControlGame < handle
         game_state
         
         pos_step = 10;
+        min_distance = 100;
         monitor
         
         visual_angle_surround = 21.5;
@@ -23,11 +24,10 @@ classdef FlashGratingControlGame < handle
         is_eyeshadow_disabled = true;
         is_disable_control_with_eyetracker = true;
         is_quit = false;
-
-        target_size
         
         x_pos = 0
         y_pos = 0
+        
         lsl;
         trial_info
         
@@ -38,57 +38,65 @@ classdef FlashGratingControlGame < handle
         attention_circle
         
         game_type;
+        num_items = 10;
+        target_size = 50;
+        
+        grating_size = 350;
+        fovea_size = 100;
+        boundary_size = 300
     end
     
     methods
         
         function this = FlashGratingControlGame(distance, width)
             setMonitor(this, distance, width)
-            setCenterSurroundGrating(this, this.monitor.distance, this.monitor.px_unit, ...
-                this.visual_angle_surround, this.visual_angle_center);
+            setGame(this)
+        end
+        
+        function setGame(this)
+            setCenterSurroundGrating(this, this.grating_size, this.fovea_size);
             
             setController(this, this.monitor.px_width, this.monitor.px_height)
             
-            this.target_size = 200;
-            num_items = 25;
             % this.game_objects = targetsLeftRight(GameObjects(this.target_size));
             % this.game_state = moveLeftRight(GameState(this.monitor.px_width, this.monitor.px_height), 700);
-            this.game_objects = randomObjectsAndTargets(GameObjects(this.target_size),100,num_items);
-            this.game_state = GameState(this.monitor.px_width, this.monitor.px_height, 50);
+            this.game_objects = randomObjectsAndTargets(GameObjects(this.target_size),this.target_size, this.num_items);
+            this.game_state = GameState(this.monitor.px_width, this.monitor.px_height, this.boundary_size);
             
             this.attention_circle = CenterAttentionCircle(100);
         end
         
-
-        function setMonitor(this, distance, width)
-            scrn_size = get(0,'ScreenSize');
-            this.monitor.px_width = scrn_size(3);
-            this.monitor.px_height = scrn_size(4);
+        function setMonitor(this, distance, width, pixel_dims)
+            if nargin < 4
+                pixel_dims = get(0,'ScreenSize');
+                this.monitor.px_width = pixel_dims(3);
+                this.monitor.px_height = pixel_dims(4);
+            end
             this.monitor.distance = distance;
             this.monitor.width = width;
-            this.monitor.px_unit = this.pixelsPerUnit(scrn_size(3), width);           
+            this.monitor.px_per_unit = this.pixelsPerUnit(this.monitor.px_width, width);
         end
         
         function setEyelinkController(this, eyelink)
             this.eyelink = eyelink;
         end
         
-        function setCenterSurroundGrating(this, monitor_distance, px_unit, visual_angle_surround, visual_angle_center)
+        function setCenterSurroundGrating(this, surround_size, center_size)
             % visual angle Center 6.1° 563 pixels surround  21.5° 946pixels
             % surround_size = 946/2;
             % center_size = 266/2;
-
+            
             orientation = 90; contrast = 1; flicker_freq = 5; flip_time = 1;
-            spatial_freq = .05;           
-            surround_size = this.pxSizeVisualAngle(visual_angle_surround, monitor_distance, px_unit);
-            center_size = this.pxSizeVisualAngle(visual_angle_center, monitor_distance, px_unit);
-
+            spatial_freq = .05;
+            %             surround_size = this.pxSizeVisualAngle(visual_angle_surround, monitor_distance, px_per_unit);
+            %             center_size = this.pxSizeVisualAngle(visual_angle_center, monitor_distance, px_per_unit);
+            
             this.flicker_grating = CenterSurroundGrating();
-            this.flicker_grating.setSurround(1000/2, spatial_freq, contrast, orientation, flicker_freq, flip_time)
+            this.flicker_grating.setSurround(surround_size, spatial_freq, contrast, orientation, flicker_freq, flip_time)
             % this.flicker_grating.setCenter(400/2, spatial_freq, contrast, orientation, flicker_freq, flip_time);
-            this.flicker_grating.setBoundaryPoints([0 0 50 50], center_size*2);
+            this.flicker_grating.setBoundaryPoints([0 0 50 50], center_size);
         end
-
+        
         function makeWindow(this, screen)
             if this.is_quit
                 return
@@ -97,13 +105,15 @@ classdef FlashGratingControlGame < handle
                 screen = 0;
             end
             
-            
             try
                 info = Screen('GetWindowInfo', this.window);
                 warning('screen already opened.')
             catch
                 disp('No Screen found, creating a new Screen')
-                [this.window] = create_screen(screen); % generate window
+                [this.window, scrn_width, scrn_height] = create_screen(screen); % generate window
+                this.monitor.px_width = scrn_width;
+                this.monitor.px_height = scrn_height;
+                setGame(this)
                 this.flicker_grating.makeTexture(this.window);
             end
             
@@ -155,6 +165,7 @@ classdef FlashGratingControlGame < handle
            
             % mark the start event code for lsl stream
             sendLSLTriggerStream(this, this.start_code)           
+            intv_time = 0;
             while this.keyboard.update() && (current_time < end_time)
                 
                 % Run eyelink recording and on screen tracking shadow.
@@ -182,7 +193,7 @@ classdef FlashGratingControlGame < handle
 
                 % set objects in random positions.this.target.is_hit
                 if i == 0 || this.game_state.is_new_trial
-                    this.game_state.generateRandomPosition(this.x_pos, this.y_pos, this.game_objects.num_items, 200);
+                    this.game_state.generateRandomPosition(this.x_pos, this.y_pos, this.game_objects.num_items, this.min_distance);
                 % scrn_obj_pos = this.game_state.generateRandomXPosition(this.x_pos, 300);
                 % scrn_obj_pos = this.game_state.pickRandomFixedPosition();
 %                     this.game_state.setFixedPosition()
@@ -192,14 +203,14 @@ classdef FlashGratingControlGame < handle
     
                 % check that position of keyboard and the target box are close to each
                 % other.
-                is_hit = this.game_objects.checkItemStatus(this.game_state, this.x_pos, this.y_pos);
+                [is_hit, is_new] = this.game_objects.checkItemStatus(this.game_state, this.x_pos, this.y_pos);
 %                 game_state.checkBoxStatus(is_hit, -1);
 
                 % draw textures
                 %1) flashing grating
                 this.flicker_grating.drawTexture(this.x_pos, this.y_pos, this.window, i);
-%                 this.attention_circle.drawTexture(this.x_pos, this.y_pos, this.window, current_time);
-                this.flicker_grating.drawHitRing(this.x_pos, this.y_pos, this.window, is_hit)
+%                 this.attention_c1ircle.drawTexture(this.x_pos, this.y_pos, this.window, current_time);
+                this.flicker_grating.drawHitRing(this.x_pos, this.y_pos, this.window, is_hit, is_new, intv_time)
 
                 if ~this.is_obj_disabled
                     % 2) game objects
@@ -215,7 +226,8 @@ classdef FlashGratingControlGame < handle
                 sendLSLStream(this);
                 
                 % Flip 'waitframes' monitor refresh intervals after last redraw.
-                current_time = Screen('Flip', this.window, current_time + (1 - 0.5) * ifi);
+                intv_time = (1 - 0.5) * ifi;
+                current_time = Screen('Flip', this.window, intv_time + current_time);
                 i=i+1;
             end
             
@@ -231,9 +243,10 @@ classdef FlashGratingControlGame < handle
 %             answer = this.keyboard.answerRecorder(5);
 %             is_correct = drawOutlineOverTheAnswer(answer, correct_answer, x_lim, y_lim, this.window);
 %           1234  this.attention_circle.addScore(is_correct);
-            response = GetEchoString(this.window, 'How many mines did you find? \n (Input number with the keypad)',this.keyboard.x_pos,this.keyboard.y_pos,[255 255 255],[0 0 0], 1);
+            response = echoString(this.window, 'How many mines did you find? \n (Input number with the keypad)',this.keyboard.x_pos,this.keyboard.y_pos,[255 255 255],[0 0 0], 1);
             response = str2num(response);
             answer = this.game_state.score;
+            is_correct = echoAnswer(response, answer, this.window);
             sendLSLScore(this, answer, response)
             this.ai_controller.reset();
             Screen('Flip', this.window)
@@ -322,8 +335,8 @@ classdef FlashGratingControlGame < handle
             pixel_size = round(fov_size * pixel_per_unit);
         end
         
-        function px_unit = pixelsPerUnit(pixels, length)
-            px_unit = pixels/length;
+        function px_per_unit = pixelsPerUnit(pixels, length)
+            px_per_unit = pixels/length;
         end
         
         function freq = cyclesPerDegree(pixels_per_inch, distance, spatial_freq)

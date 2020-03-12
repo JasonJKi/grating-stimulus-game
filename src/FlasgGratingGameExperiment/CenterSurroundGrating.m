@@ -12,7 +12,10 @@ classdef CenterSurroundGrating < handle
         fixation_point
         center_surround_boundary
         center_boundary_size
-       detecion_ring
+        detecion_ring
+        
+        light_on = false;
+        timer=0
     end
     
     methods
@@ -33,7 +36,6 @@ classdef CenterSurroundGrating < handle
             this.center_boundary_size = boundary_size;
             this.center_surround_boundary = ScreenObject([0 0 0], [0 0 boundary_size boundary_size]);
             this.detecion_ring = ScreenObject([200 200 200], [0 0 boundary_size boundary_size]);
-            
         end
         
         function makeTexture(this, window)
@@ -45,7 +47,7 @@ classdef CenterSurroundGrating < handle
         
         function drawTexture(this, x_pos, y_pos, window, i)
             this.surround_grating.drawTexture( x_pos, y_pos, window, i);
-            %             this.center_grating.drawTexture( x_pos, y_pos, window, i);
+            % this.center_grating.drawTexture( x_pos, y_pos, window, i);
             
             this.fixation_point.setPosition(x_pos, y_pos);
             this.fixation_point.drawTexture(window,'FrameOval');
@@ -54,11 +56,16 @@ classdef CenterSurroundGrating < handle
             this.center_surround_boundary.drawTexture(window,'FrameOval');
         end
         
-        
-        function drawHitRing(this, x_pos, y_pos, window, is_hit)
-            if is_hit
-                this.detecion_ring.setPosition(x_pos, y_pos);
-                this.detecion_ring.drawOvalFrame(window, [100 100 100], 50);
+        function drawHitRing(this, x_pos, y_pos, window, is_hit, is_new, time)
+            if is_hit && ~this.light_on
+                if this.timer < .15 && is_new
+                    this.detecion_ring.setPosition(x_pos, y_pos);
+                    this.detecion_ring.drawOvalFrame(window, [150 150 150], 50);
+                    this.timer = this.timer + time;
+                else
+                    this.light_on = false;
+                    this.timer = 0;
+                end
             end
         end
         

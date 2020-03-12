@@ -30,6 +30,6 @@ switch type
         param.is_obj_disabled = true;
         param.trial_duration = trial_duration;
         param.pause_duration = pause_duration;
-        param.game_type = 4;
+        param.game_type = 5;
 end
 

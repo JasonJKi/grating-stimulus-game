@@ -32,7 +32,7 @@ flicker_types = {'constant', 'constant'};
 game_types = {'mine sweeper', 'mine sweeper watching'};
 % , 'static', 'left and right control','left and right passive pursuit', 'mine sweeper'};
 %% Exp 1; variable contrast (static)
-trial_duration = 10; 
+trial_duration = 10;
 pause_duration = 1;
 num_exp = length(flicker_types);
 indx = 1:num_exp;
@@ -45,11 +45,13 @@ for i = 1:num_exp
     
     flicker_type = flicker_types{r};
     game_type = game_types{r};
+    
     if strcmp(flicker_type,'calibrate')
         eyelink.calibrate(screen_num);
         eyelink.startRecord(subject_name);
         return
     end
+    
     flicker_param = flickerParam(flicker_type,num_repeats);
     game_param = gameParam(game_type, trial_duration, pause_duration);
     exp_param = setstructfields(flicker_param, game_param);
@@ -57,11 +59,8 @@ for i = 1:num_exp
     makeWindow(flash_grating_game, screen_num);
 %     showGameInstructions(flash_grating_game, game_type);
     runTrials(flash_grating_game, exp_param);
-%     sca
     
-%     ii = ii + 1;
 end
-sca
     
     
 

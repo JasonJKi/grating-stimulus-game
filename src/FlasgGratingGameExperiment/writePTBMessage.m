@@ -4,9 +4,14 @@ vbl = Screen('Flip', window);
 ifi = Screen('GetFlipInterval', window);
 
 duration = vbl + duration;
-
-while vbl < duration
-    
+is_escape = false;
+while vbl < duration && ~is_escape
+    [keyIsDown,secs, keyCode] = KbCheck;
+    if keyCode(KbName('ESCAPE'))
+        is_escape = true;
+        sca
+        error('pressed escape')
+    end
     Screen('TextSize', window, 40);
     Screen('TextFont', window, 'Courier');
     DrawFormattedText(window, text, 'center', 'center', [255 255 255])

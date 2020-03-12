@@ -59,7 +59,7 @@ classdef GameObjects < handle
             end
         end
         
-        function is_hit = checkItemStatus(this, game_state, x_pos, y_pos)
+        function [is_hit, is_new] = checkItemStatus(this, game_state, x_pos, y_pos)
             is_hit = false;
             for i = 1:this.num_items
                 item_hit = this.items(i).isHit(x_pos, y_pos, this.min_distance);
@@ -68,7 +68,11 @@ classdef GameObjects < handle
                     game_state.current_hit_item_index = i;
                     updateScore(game_state, 1)
                 end
-                
+            end
+            is_new = false;
+            if game_state.current_hit_item_index ~= game_state.prev_hit_item_index
+                is_new = true;
+                game_state.prev_hit_item_index = game_state.current_hit_item_index;
             end
             %                 disp(is_hit)
             %                 game_state.checkBoxStatus(this.items, -1);

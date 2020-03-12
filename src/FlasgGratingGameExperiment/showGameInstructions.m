@@ -1,6 +1,13 @@
 function showGameInstructions(type, window)
 
+try 
+    info = Screen('GetWindowInfo', window);
+catch
+    return
+end
+
 writePTBMessage(type, 3, window)
+
 switch type
     case 'general'
         writePTBMessage(['a light will flicker in the center of the screen' ], 5, window)
@@ -14,13 +21,13 @@ switch type
     case 'free movement'
         writePTBMessage('Move the circle flicker freely in any direction you desire' , 5, window)
     case 'mine sweeper'
-        writePTBMessage('Move the flashing flicker freely in any direction you desire' , 5, window)
+        writePTBMessage('Move the flashing flicker freely in any direction you desire.' , 5, window)
         writePTBMessage('When the flicker passes over a mine,\n the center circle will light up.' , 7, window)
-        writePTBMessage('Count the number of times the center circle lights up' , 5, window)
+        writePTBMessage('Count the number of times the center circle lights up.' , 5, window)
         writePTBMessage('It is okay to go over the same mine more than once.' , 5, window)
-        writePTBMessage('But try yout best to move around the entire screen.' , 5, window)
+        writePTBMessage('Try your best to move around the entire screen \n to find as many mine as possible' , 5, window)
     case 'mine sweeper watching'
-        writePTBMessage('Follow the flashing flicker with your eyes by staring at the center of the circle.' , 5, window)
+        writePTBMessage('Follow the flashing flicker with your eyes while maintaining your eye fixated on the red dot.' , 5, window)
         writePTBMessage('Look at the center of the screen when it is passing by.' , 5, window)
         writePTBMessage('When the flicker passes over a mine,\n the center circle will light up.' , 7, window)
         writePTBMessage('Count the number of times the center circle lights up' , 5, window)
@@ -34,7 +41,8 @@ end
 %     writePTBMessage('You will have 5 seconds to answer the question.' , 5, window)
 %     writePTBMessage('Also, there is a static red dot will be in the flicker.' , 5, window)
 % end
-writePTBMessage('Keep eye fixated on that dot at all times. \n Otherwise, the keyboard will be disabled.' , 5, window)
+
+writePTBMessage('Keep eye fixated on the red dot at all times. \n Otherwise, the flicker control will be disabled.' , 5, window)
 writePTBMessage('Experiment will begin in 3' ,1, window)
 writePTBMessage('Experiment will begin in 2' , 1, window)
 writePTBMessage('Experiment will begin in 1' , 1, window)
